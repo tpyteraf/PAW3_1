@@ -6,12 +6,82 @@
 
   const apiKey = "rc_live_5210b6adbcf94753b98fcc8bdc71a4c0";
 
+  async function fetchInfo(ccn, row) {
+    const existingDetails = row.nextElementSibling;
+    if (existingDetails?.classList.contains("country-details-row")) {
+      existingDetails.remove();
+      return;
+    }
+
+    const detailsRow = document.createElement("tr");
+    detailsRow.className = "country-details-row";
+
+    const detailsCell = document.createElement("td");
+    detailsCell.colSpan = row.cells.length;
+
+    const detailsDiv = document.createElement("div");
+    detailsDiv.className = "country-details";
+    detailsDiv.textContent = "Loading...";
+
+    detailsCell.appendChild(detailsDiv);
+    detailsRow.appendChild(detailsCell);
+    row.after(detailsRow);
+
+    try {
+      const response = await fetch(
+        `https://api.restcountries.com/countries/v5?codes.ccn3=${encodeURIComponent(ccn)}`,
+        { headers: { Authorization: `Bearer ${apiKey}` } },
+      );
+
+      if (!response.ok) {
+        const textError = await response.text();
+        throw new Error(`Błąd serwera ${response.status}: ${textError}`);
+      }
+
+      const json = await response.json();
+      const countryData = json.data.objects[0];
+      const officialName = countryData.names.official;
+      const currency = countryData.currencies[0].name;
+      const flag = countryData.flag.url_png;
+
+      detailsDiv.replaceChildren();
+
+      if (flag) {
+        const flagImage = document.createElement("img");
+        flagImage.src = flag;
+        flagImage.alt = `Flaga: ${officialName}`;
+        flagImage.className = "country-details__flag";
+        detailsDiv.appendChild(flagImage);
+      }
+
+      const info = document.createElement("div");
+      info.className = "country-details__info";
+
+      const officialParagraph = document.createElement("p");
+      const currencyParagraph = document.createElement("p");
+      officialParagraph.append("Official name: ", officialName);
+      currencyParagraph.append("Currency: ", currency);
+      info.append(officialParagraph, currencyParagraph);
+      detailsDiv.appendChild(info);
+    } catch (error) {
+      detailsDiv.textContent = "Nie udało się pobrać dodatkowych informacji.";
+      console.error(error.message);
+    }
+  }
+
+  answer.addEventListener("click", function (e) {
+    const row = e.target.closest("tr.country-row");
+    if (row) {
+      fetchInfo(row.dataset.country, row);
+    }
+  });
+
   form1.addEventListener("submit", function (e) {
     e.preventDefault();
     const query = document.getElementById("inp1").value;
 
     answer.innerHTML = "Loading...";
-    fetch(`https://api.restcountries.com/countries/v5?names.common=${query}`, {
+    fetch(`https://api.restcountries.com/countries/v5?names.common=${encodeURIComponent(query)}`, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
@@ -54,7 +124,7 @@
             const subregion = country.subregion || "Brak danych";
 
             tableHTML += `
-              <tr>
+              <tr class="country-row" data-country="${country.codes.ccn3}">
                 <td>${name}</td>
                 <td>${capital}</td>
                 <td>${population}</td>
@@ -77,7 +147,7 @@
       })
       .catch((error) => {
         answer.innerHTML =
-          "<p style='color: red;'>Wystąpił błąd podczas pobierania danych.</p>";
+          '<p class="error-message">Wystąpił błąd podczas pobierania danych.</p>';
         console.error(error.message);
       });
   });
@@ -87,7 +157,7 @@
     const query = document.getElementById("inp2").value;
 
     answer.innerHTML = "Loading...";
-    fetch(`https://api.restcountries.com/countries/v5?capitals=${query}`, {
+    fetch(`https://api.restcountries.com/countries/v5?capitals=${encodeURIComponent(query)}`, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
@@ -134,7 +204,7 @@
             languages = languages.slice(0, -2);
 
             tableHTML += `
-              <tr>
+              <tr class="country-row" data-country="${country.codes.ccn3}">
                 <td>${name}</td>
                 <td>${capital}</td>
                 <td>${population}</td>
@@ -157,7 +227,7 @@
       })
       .catch((error) => {
         answer.innerHTML =
-          "<p style='color: red;'>Wystąpił błąd podczas pobierania danych.</p>";
+          '<p class="error-message">Wystąpił błąd podczas pobierania danych.</p>';
         console.error(error.message);
       });
   });
@@ -166,7 +236,7 @@
     e.preventDefault();
     const query = document.getElementById("region").value;
     if (query === "") {
-      answer.innerHTML = "<p style='color: red;'>Wybierz region.</p>";
+      answer.innerHTML = '<p class="error-message">Wybierz region.</p>';
       return;
     }
 
@@ -218,7 +288,7 @@
             const subregion = country.subregion || "Brak danych";
 
             tableHTML += `
-              <tr>
+              <tr class="country-row" data-country="${country.codes.ccn3}">
                 <td>${name}</td>
                 <td>${capital}</td>
                 <td>${population}</td>
@@ -240,7 +310,7 @@
       })
       .catch((error) => {
         answer.innerHTML =
-          "<p style='color: red;'>Wystąpił błąd podczas pobierania danych.</p>";
+          '<p class="error-message">Wystąpił błąd podczas pobierania danych.</p>';
         console.error(error.message);
       });
   });

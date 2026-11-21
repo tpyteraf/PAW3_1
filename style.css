@@ -40,3 +40,32 @@ html {
 .styled-table tbody tr:hover {
   background-color: #f1f1f1;
 }
+
+.country-details {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 8px;
+  padding: 12px 16px;
+  border-left: 4px solid #009879;
+  border-radius: 4px;
+  background: #f4f7fb;
+}
+
+.country-details__flag {
+  width: 80px;
+  height: auto;
+  border: 1px solid #dddddd;
+}
+
+.country-details__info p {
+  margin: 4px 0;
+}
+
+.error-message {
+  color: #cc0000;
+}
+
+tr.country-row:hover {
+  cursor: pointer;
+}
